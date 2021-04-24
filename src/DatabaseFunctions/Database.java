@@ -15,10 +15,12 @@ public class Database {
 			String sql = "CREATE TABLE USERS" + "(ID int NOT NULL AUTO_INCREMENT," + " USERNAME TEXT NOT NULL, " + "PASSWORD TEXT NOT NULL," + " FIRSTNAME TEXT NOT NULL, " + 
 			"LASTNAME TEXT NOT NULL," + " EMAILADDRESS TEXT NOT NULL, " + "MAILINGADDRESS TEXT NOT NULL, " + position + "TEXT NOT NULL);";
 			
+			// Call the execute/update method on the statement, then close the statement and connection. Finally print out the string shown.
 			stmt.executeUpdate(sql);
 			stmt.close();
 			c.close();
 			System.out.println("The table of Users has been created.");
+			
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -35,10 +37,12 @@ public class Database {
 			// Each item in this table (named shoppingcart) will contain: an item name, quantity, and a price. (Real is the format of a float).
 			String sql = "CREATE TABLE SHOPPINGCART" + "(ID int NOT NULL AUTO_INCREMENT," + " ITEMNAME TEXT NOT NULL, " + "QUANTITY INT NOT NULL, " + "PRICE REAL NOT NULL);";
 			
+			// Call the execute/update method on the statement, then close the statement and connection. Finally print out the string shown.
 			stmt.executeUpdate(sql);
 			stmt.close();
 			c.close();
 			System.out.println("The shopping cart has been created.");
+			
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -61,6 +65,7 @@ public class Database {
 			
 			// Define the behavior for this to be sent to the GUI. It is currently not completed (PLEASE FINISH).
 			System.out.println("The shopping cart has been created.");
+			
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -99,10 +104,12 @@ public class Database {
 			String sql = "INSERT INTO USERS" + "(USERNAME,PASSWORD,FIRSTNAME,LASTNAME,EMAILADDRESS,MAILINGADDRESS,POSITION) " + "VALUES(" + credentials + ");";
 			stmt.executeLargeUpdate(sql);
 			
+			// Close statement, then commit the changes and finally close the connection. Lastly, print out the string shown.
 			stmt.close();
 			c.commit();
 			c.close();
 			System.out.println("Created Account.");
+			
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -111,17 +118,19 @@ public class Database {
 	}
 	
 	// A method that handles inserting the shopping cart item into the database by passing in a statement, connection, and item in a string format.
-	public void insertItem(Statement stmt, Connection c, String itemName, float price) {
+	public void insertItem(Statement stmt, Connection c, String itemName, int quantity, float price) {
 		try {
 			c.setAutoCommit(false);
 			stmt = c.createStatement();
-			String sql = "INSERT INTO SHOPPINGCART" + "(ITEMNAME,PRICE) " + "VALUES(" + itemName + "," + price + ");";
+			String sql = "INSERT INTO SHOPPINGCART" + "(ITEMNAME,PRICE) " + "VALUES(" + itemName + ","+ quantity + "," + price + ");";
 			stmt.executeLargeUpdate(sql);
 			
+			// Close statement, then commit the changes and finally close the connection. Lastly, print out the string shown.
 			stmt.close();
 			c.commit();
 			c.close();
 			System.out.println("Inserted Item into Cart.");
+			
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.err.println(e.getClass().getName() + ": " + e.getMessage());
@@ -129,8 +138,33 @@ public class Database {
 		}
 	}
 	
-	public void shoppingCarttoPendingOrder() {
-		
+	// Current attempt at implementing the feature of essentially copying the table of items into the pending order table.
+	public void shoppingCarttoPendingOrder(Statement stmt, Connection c) {
+		try {
+			// Declaring a result set, which basically just grabs all of the information from the sql command 'select' that follows it.
+			// ExecuteQuery is just a command to execute the sql command of "select" in the quotation marks. This is stored in the rs variable.
+			ResultSet rs =  stmt.executeQuery("select * from SHOPPINGCART;");
+			
+			// Iterating with a while loop and storing the information into variables.
+			while(rs.next()) {
+				String itemName = rs.getString("itemname");
+				int price = rs.getInt("price");
+				int quantity = rs.getInt("quantity");
+				
+				insertItem(stmt, c, itemName, quantity, price);
+
+			}
+			
+			// Close resources.
+			rs.close();
+			stmt.close();
+			c.close();
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+			System.err.println(e.getClass().getName() + ": " + e.getMessage());
+			System.exit(0);
+		}
 	}
 	
 	// Delete item function, not complete yet, but will take in the argument that is passed into it and delete the respective item.
@@ -179,7 +213,8 @@ public class Database {
 	public boolean loginVerification(Statement stmt, Connection c, String tableName, String user, String pass) {
 		try {
 			stmt = c.createStatement();
-			// Grabs all of the information, brings it back to print it out.
+			// Declaring a result set, which basically just grabs all of the information from the sql command 'select' that follows it.
+			// ExecuteQuery is just a command to execute the sql command of "select" in the quotation marks. This is stored in the rs variable.
 			ResultSet rs = stmt.executeQuery("select USERNAME,PASSWORD from " + tableName + ";");
 			
 			// While loop that iterates over the result set, assigned the .get call to username and password for comparisons.
@@ -194,7 +229,7 @@ public class Database {
 				}
 			}
 			
-			// Closing the various elements.
+			// Closing resources.
 			rs.close();
 			stmt.close();
 			c.close();
@@ -208,6 +243,7 @@ public class Database {
 		return false;
 	}
 	
+	// [UNFINISHED] TO-DO
 	public void logOut() {
 		
 	}
